@@ -108,13 +108,6 @@ implicit none
   u_fwd1_dt1 = explicitstepCD(u_fwd1_dt1,c1)
   u_fwd1_dt2 = explicitstepCD(u_fwd1_dt2,c2)
 
-  !do i = 2,Nx-1
-  !  u_fwd1_dt1(i) = u_fwd1_dt1(i) + c1*(u_fwd1_dt1(i+1) - 2*u_fwd1_dt1(i) &
-  !    + u_fwd1_dt1(i-1))
-  !  u_fwd1_dt2(i) = u_fwd1_dt2(i) + c2*(u_fwd1_dt2(i+1) - 2*u_fwd1_dt2(i) &
-  !    + u_fwd1_dt2(i-1))
-  !enddo
-
   print *,'u_fwd1_dt1=', u_fwd1_dt1
   print *,'u_fwd1_dt2=', u_fwd1_dt2
 
@@ -126,15 +119,38 @@ implicit none
   print *,'u_bkwd1_dt2 =', u_bkwd1_dt2
 
   !! Ten Steps
-  ! Explicit
+  do i=1,10
+    ! Explicit
+    u_fwd10_dt1 = explicitstepCD(u_fwd10_dt1,c1)
+    u_fwd10_dt2 = explicitstepCD(u_fwd10_dt2,c2)
 
-  !Implicit
+    ! Implicit
+    u_bkwd10_dt1 = matmul(M1inv,u_bkwd10_dt1)
+    u_bkwd10_dt2 = matmul(M2inv,u_bkwd10_dt2)
+  enddo
+
+  print *,'u_fwd10_dt1=', u_fwd10_dt1
+  print *,'u_fwd10_dt2=', u_fwd10_dt2
+
+  print *,'u_bkwd10_dt1 =', u_bkwd10_dt1
+  print *,'u_bkwd10_dt2 =', u_bkwd10_dt2
 
   !! Fifty Steps
-  ! Explicit
+  do i=1,50
+    ! Explicit
+    u_fwd50_dt1 = explicitstepCD(u_fwd50_dt1,c1)
+    u_fwd50_dt2 = explicitstepCD(u_fwd50_dt2,c2)
 
-  ! Implicit
+    ! Implicit
+    u_bkwd50_dt1 = matmul(M1inv,u_bkwd50_dt1)
+    u_bkwd50_dt2 = matmul(M2inv,u_bkwd50_dt2)
+  enddo
 
+  print *,'u_fwd50_dt1=', u_fwd50_dt1
+  print *,'u_fwd50_dt2=', u_fwd50_dt2
+
+  print *,'u_bkwd50_dt1 =', u_bkwd50_dt1
+  print *,'u_bkwd50_dt2 =', u_bkwd50_dt2
   !! Write to output file for gnuplot
 
 contains
@@ -151,6 +167,7 @@ contains
 
     u_out = u
   end function explicitstepCD
+
   ! https://stackoverflow.com/a/43766617/11619514
   function inv(A) result(Ainv)
     implicit none
