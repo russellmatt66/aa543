@@ -210,7 +210,32 @@ implicit none
   open(25, file = 'dat/x_grid.dat')
 
 
-  do i=1,Nx
+  do i=0,Nx
+    if (i == 0) then
+      write(7, *) 'fwdcds_n1_dt1'
+      write(8, *) 'fwdcds_n10_dt1'
+      write(9, *) 'fwdcds_n50_dt1'
+      write(10, *) 'fwdcds_n1_dt2'
+      write(11, *) 'fwdcds_n10_dt2'
+      write(12, *) 'fwdcds_n50_dt2'
+
+      write(13, *) 'bkwdcds_n1_dt1'
+      write(14, *) 'bkwdcds_n10_dt1'
+      write(15, *) 'bkwdcds_n50_dt1'
+      write(16, *) 'bkwdcds_n1_dt2'
+      write(17, *) 'bkwdcds_n10_dt2'
+      write(18, *) 'bkwdcds_n50_dt2'
+
+      write(19,*) 'anal1_dt1'
+      write(20,*) 'anal10_dt1'
+      write(21,*) 'anal50_dt1'
+      write(22,*) 'anal1_dt2'
+      write(23,*) 'anal10_dt2'
+      write(24,*) 'anal50_dt2'
+
+      write(25,*) 'x_grid'
+    end if
+
     write(7,'(f14.12)') u_fwd1_dt1(i)
     write(8,'(f14.12)') u_fwd10_dt1(i)
     write(9,'(f14.12)') u_fwd50_dt1(i)
