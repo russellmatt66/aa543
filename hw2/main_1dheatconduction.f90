@@ -14,13 +14,18 @@ implicit none
   real, parameter :: dt2 = 0.0013
   real, parameter :: c1 = dt1/(2.0*dx)
   real, parameter :: c2 = dt2/(2.0*dx)
+  real, parameter :: pi = 4.0*atan(1.0)
 
-  integer i, N
+  integer i, j
+  integer, parameter :: N = 5
   integer, parameter :: Nx = (xf - xi)/dx + 1
+
+  real, dimension(N) :: A_n
 
   real, dimension(Nx) :: x_grid, u_ic, u_fwd1_dt1, u_fwd10_dt1, u_fwd50_dt1, &
     u_fwd1_dt2, u_fwd10_dt2, u_fwd50_dt2, u_bkwd1_dt1, u_bkwd10_dt1, u_bkwd50_dt1, &
-    u_bkwd1_dt2, u_bkwd10_dt2, u_bkwd50_dt2
+    u_bkwd1_dt2, u_bkwd10_dt2, u_bkwd50_dt2, u_anal1_dt1, u_anal10_dt1, u_anal50_dt1, &
+    u_anal1_dt2, u_anal10_dt2, u_anal50_dt2
 
   real, dimension(Nx,Nx) :: CDstencil, M1, M2, M1inv, M2inv, Iden
 
@@ -38,6 +43,7 @@ implicit none
 
   ! initialize x_grid, initial conditions, and Central Difference stencil for
   ! implicit solve.
+
   CDstencil = 0.0
   Iden = 0.0
   M1 = 0.0 ! matrices whose inverse will be used for implicit update
@@ -45,12 +51,22 @@ implicit none
 
   do i=1,size(x_grid)
 
-    x_grid(i) = xi + dx*i ! dx*i should be 'real'
+    x_grid(i) = xi + dx*(i-1) ! dx*i should be 'real'
 
     if (x_grid(i) .LE. 0.5) then
       u_ic(i) = 2.0*x_grid(i)
+
+      do j=1,N
+        A_n(j) = (-1.0)**(1+j)*(4.0/(REAL(j)*pi))
+      enddo
+
     else if (x_grid(i) .gt. 0.5) then
+
       u_ic(i) = 2.0 - 2.0*x_grid(i)
+
+      do j=1,N
+        A_n(j) = (4.0/(REAL(j)*pi))
+      enddo
     end if
 
     Iden(i,i) = 1.0
@@ -66,7 +82,6 @@ implicit none
       CDstencil(i+1,i) = 1.0
       CDstencil(i-1,i) = 1.0
     end if
-
   enddo
 
   M1 = Iden - c1*CDstencil
@@ -100,6 +115,12 @@ implicit none
   u_bkwd1_dt2 = u_ic
   u_bkwd10_dt2 = u_ic
   u_bkwd50_dt2 = u_ic
+  u_anal1_dt1 = u_ic
+  u_anal10_dt1 = u_ic
+  u_anal50_dt1 = u_ic
+  u_anal1_dt2 = u_ic
+  u_anal10_dt2 = u_ic
+  u_anal50_dt2 = u_ic
 
   ! print *, 'velocities initialized succesfully'
 
@@ -151,7 +172,72 @@ implicit none
 
   print *,'u_bkwd50_dt1 =', u_bkwd50_dt1
   print *,'u_bkwd50_dt2 =', u_bkwd50_dt2
+
+  ! Analytical Solutions:
+  do j=1,N
+    do i=2,Nx-1
+      u_anal1_dt1(i) = u_anal1_dt1(i) + A_n(j)*exp(-(REAL(j)**2)*(pi**2)*dt1)*sin(REAL(j)*pi*x_grid(i))
+      u_anal10_dt1(i) = u_anal10_dt1(i) + A_n(j)*exp(-(REAL(j)**2)*(pi**2)*10.0*dt1)*sin(REAL(j)*pi*x_grid(i))
+      u_anal50_dt1(i) = u_anal50_dt1(i) + A_n(j)*exp(-(REAL(j)**2)*(pi**2)*50.0*dt1)*sin(REAL(j)*pi*x_grid(i))
+      u_anal1_dt2(i) = u_anal1_dt2(i) + A_n(j)*exp(-(REAL(j)**2)*(pi**2)*dt2)*sin(REAL(j)*pi*x_grid(i))
+      u_anal10_dt2(i) = u_anal10_dt2(i) + A_n(j)*exp(-(REAL(j)**2)*(pi**2)*10.0*dt2)*sin(REAL(j)*pi*x_grid(i))
+      u_anal50_dt2(i) = u_anal50_dt2(i) + A_n(j)*exp(-(REAL(j)**2)*(pi**2)*50.0*dt1)*sin(REAL(j)*pi*x_grid(i))
+    end do
+  end do
+
   !! Write to output file for gnuplot
+  open(7, file = 'dat/fwddata1_dt1.dat')
+  open(8, file = 'dat/fwddata10_dt1.dat')
+  open(9, file = 'dat/fwddata50_dt1.dat')
+  open(10, file = 'dat/fwddata1_dt2.dat')
+  open(11, file = 'dat/fwddata10_dt2.dat')
+  open(12, file = 'dat/fwddata50_dt2.dat')
+
+  open(13, file = 'dat/bkwddata1_dt1.dat')
+  open(14, file = 'dat/bkwddata10_dt1.dat')
+  open(15, file = 'dat/bkwddata50_dt1.dat')
+  open(16, file = 'dat/bkwddata1_dt2.dat')
+  open(17, file = 'dat/bkwddata10_dt2.dat')
+  open(18, file = 'dat/bkwddata50_dt2.dat')
+
+  open(19, file = 'dat/analdata1_dt1.dat')
+  open(20, file = 'dat/analdata10_dt1.dat')
+  open(21, file = 'dat/analdata50_dt1.dat')
+  open(22, file = 'dat/analdata1_dt2.dat')
+  open(23, file = 'dat/analdata10_dt2.dat')
+  open(24, file = 'dat/analdata50_dt2.dat')
+
+  open(25, file = 'dat/x_grid.dat')
+
+
+  do i=1,Nx
+    write(7,'(f14.12)') u_fwd1_dt1(i)
+    write(8,'(f14.12)') u_fwd10_dt1(i)
+    write(9,'(f14.12)') u_fwd50_dt1(i)
+    write(10,'(f14.12)') u_fwd1_dt2(i)
+    write(11,'(f14.12)') u_fwd10_dt2(i)
+    write(12,'(f14.12)') u_fwd50_dt2(i)
+
+    write(13,'(f14.12)') u_bkwd1_dt1(i)
+    write(14,'(f14.12)') u_bkwd10_dt1(i)
+    write(15,'(f14.12)') u_bkwd50_dt1(i)
+    write(16,'(f14.12)') u_bkwd1_dt2(i)
+    write(17,'(f14.12)') u_bkwd10_dt2(i)
+    write(18,'(f14.12)') u_bkwd50_dt2(i)
+
+    write(19,'(f14.12)') u_anal1_dt1(i)
+    write(20,'(f14.12)') u_anal10_dt1(i)
+    write(21,'(f14.12)') u_anal50_dt1(i)
+    write(22,'(f14.12)') u_anal1_dt2(i)
+    write(23,'(f14.12)') u_anal10_dt2(i)
+    write(24,'(f14.12)') u_anal50_dt2(i)
+
+    write(25,'(f14.12)') x_grid(i)
+  end do
+
+do j=7,25
+  close(j)
+end do
 
 contains
   function explicitstepCD(u,c) result(u_out)
@@ -188,4 +274,5 @@ contains
     call SGETRI(n,Ainv,n,ipiv,work,n,info)
     if (info.ne.0) stop 'Matrix inversion failed!'
   end function inv
+
 end program ProblemOne
