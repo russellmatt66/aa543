@@ -38,8 +38,8 @@ implicit none
   !end Interface
 
   ! print *, 'Number of grid points =', Nx
-    print *, 'c1 =',c1
-    print *, 'c2 =',c2
+  ! print *, 'c1 =',c1
+  ! print *, 'c2 =',c2
 
   ! initialize x_grid, initial conditions, and Central Difference stencil for
   ! implicit solve.
@@ -98,8 +98,8 @@ implicit none
 
   ! B.Cs: u(x=0,t) = u(x=1,t) = 0
   u_ic(1) = 0
-  u_ic(size(u_ic)) = 0
-  print *, 'u_ic =', u_ic
+  u_ic(Nx) = 0
+  !print *, 'u_ic =', u_ic
   ! print *, 'CDstencil =', CDstencil
 
   ! Initialize velocities w/initial conditions
@@ -129,15 +129,15 @@ implicit none
   u_fwd1_dt1 = explicitstepCD(u_fwd1_dt1,c1)
   u_fwd1_dt2 = explicitstepCD(u_fwd1_dt2,c2)
 
-  print *,'u_fwd1_dt1=', u_fwd1_dt1
-  print *,'u_fwd1_dt2=', u_fwd1_dt2
+  !print *,'u_fwd1_dt1=', u_fwd1_dt1
+  !print *,'u_fwd1_dt2=', u_fwd1_dt2
 
   ! Implicit
   u_bkwd1_dt1 = matmul(M1inv,u_bkwd1_dt1)
   u_bkwd1_dt2 = matmul(M2inv,u_bkwd1_dt2)
 
-  print *,'u_bkwd1_dt1 =', u_bkwd1_dt1
-  print *,'u_bkwd1_dt2 =', u_bkwd1_dt2
+  !print *,'u_bkwd1_dt1 =', u_bkwd1_dt1
+  !print *,'u_bkwd1_dt2 =', u_bkwd1_dt2
 
   !! Ten Steps
   do i=1,10
@@ -150,11 +150,11 @@ implicit none
     u_bkwd10_dt2 = matmul(M2inv,u_bkwd10_dt2)
   enddo
 
-  print *,'u_fwd10_dt1=', u_fwd10_dt1
-  print *,'u_fwd10_dt2=', u_fwd10_dt2
+  !print *,'u_fwd10_dt1=', u_fwd10_dt1
+  !print *,'u_fwd10_dt2=', u_fwd10_dt2
 
-  print *,'u_bkwd10_dt1 =', u_bkwd10_dt1
-  print *,'u_bkwd10_dt2 =', u_bkwd10_dt2
+  !print *,'u_bkwd10_dt1 =', u_bkwd10_dt1
+  !print *,'u_bkwd10_dt2 =', u_bkwd10_dt2
 
   !! Fifty Steps
   do i=1,50
@@ -167,11 +167,11 @@ implicit none
     u_bkwd50_dt2 = matmul(M2inv,u_bkwd50_dt2)
   enddo
 
-  print *,'u_fwd50_dt1=', u_fwd50_dt1
-  print *,'u_fwd50_dt2=', u_fwd50_dt2
+  !print *,'u_fwd50_dt1=', u_fwd50_dt1
+  !print *,'u_fwd50_dt2=', u_fwd50_dt2
 
-  print *,'u_bkwd50_dt1 =', u_bkwd50_dt1
-  print *,'u_bkwd50_dt2 =', u_bkwd50_dt2
+  !print *,'u_bkwd50_dt1 =', u_bkwd50_dt1
+  !print *,'u_bkwd50_dt2 =', u_bkwd50_dt2
 
   ! Analytical Solutions:
   do j=1,N
@@ -209,6 +209,7 @@ implicit none
 
   open(25, file = 'dat/x_grid.dat')
 
+  open(26, file= 'dat/u_ic.dat')
 
   do i=0,Nx
     if (i == 0) then
@@ -234,6 +235,8 @@ implicit none
       write(24,*) 'anal50_dt2'
 
       write(25,*) 'x_grid'
+
+      write(26,*) 'u_ic'
     end if
 
     write(7,'(f14.12)') u_fwd1_dt1(i)
@@ -258,9 +261,11 @@ implicit none
     write(24,'(f14.12)') u_anal50_dt2(i)
 
     write(25,'(f14.12)') x_grid(i)
+
+    write(26,'(f14.12)') u_ic(i)
   end do
 
-do j=7,25
+do j=7,26
   close(j)
 end do
 
@@ -272,8 +277,9 @@ contains
     integer :: i,n
 
     n = size(u)
+
     do i=2,n-1
-      u(i)=u(i) + c*(u(i+1)-2*u(i) + u(i-1))
+      u(i) = u(i) + c*(u(i+1) - 2.0*u(i) + u(i-1))
     enddo
 
     u_out = u
