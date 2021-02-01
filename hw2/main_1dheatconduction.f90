@@ -29,18 +29,6 @@ implicit none
 
   real, dimension(Nx,Nx) :: CDstencil, M1, M2, M1inv, M2inv, Iden
 
-  !Interface inv
-  !  Function inv(A,N,M)
-  !    integer,intent(in)                :: N,M
-  !    real,intent(in),dimension(N,M)    :: A
-  !    real,dimension(N,M)               :: inv
-  !  end Function
-  !end Interface
-
-  ! print *, 'Number of grid points =', Nx
-  ! print *, 'c1 =',c1
-  ! print *, 'c2 =',c2
-
   ! initialize x_grid, initial conditions, and Central Difference stencil for
   ! implicit solve.
 
@@ -87,21 +75,13 @@ implicit none
   M1 = Iden - c1*CDstencil
   M2 = Iden - c2*CDstencil
 
-  ! print*, 'M1 =', M1
-  ! print*, 'M2 =', M2
-
   M1inv = inv(M1)
   M2inv = inv(M2)
-
-  !print *, 'M1inv =', M1inv
-  !print *, 'M2inv =', M2inv
 
   ! B.Cs: u(x=0,t) = u(x=1,t) = 0
   u_ic(1) = 0
   u_ic(Nx) = 0
-  !print *, 'u_ic =', u_ic
-  ! print *, 'CDstencil =', CDstencil
-
+  
   ! Initialize velocities w/initial conditions
   u_fwd1_dt1 = u_ic
   u_fwd10_dt1 = u_ic
@@ -122,22 +102,14 @@ implicit none
   u_anal10_dt2 = u_ic
   u_anal50_dt2 = u_ic
 
-  ! print *, 'velocities initialized succesfully'
-
   !! Single Step
   ! Explicit
   u_fwd1_dt1 = explicitstepCD(u_fwd1_dt1,c1)
   u_fwd1_dt2 = explicitstepCD(u_fwd1_dt2,c2)
 
-  !print *,'u_fwd1_dt1=', u_fwd1_dt1
-  !print *,'u_fwd1_dt2=', u_fwd1_dt2
-
   ! Implicit
   u_bkwd1_dt1 = matmul(M1inv,u_bkwd1_dt1)
   u_bkwd1_dt2 = matmul(M2inv,u_bkwd1_dt2)
-
-  !print *,'u_bkwd1_dt1 =', u_bkwd1_dt1
-  !print *,'u_bkwd1_dt2 =', u_bkwd1_dt2
 
   !! Ten Steps
   do i=1,10
@@ -150,12 +122,6 @@ implicit none
     u_bkwd10_dt2 = matmul(M2inv,u_bkwd10_dt2)
   enddo
 
-  !print *,'u_fwd10_dt1=', u_fwd10_dt1
-  !print *,'u_fwd10_dt2=', u_fwd10_dt2
-
-  !print *,'u_bkwd10_dt1 =', u_bkwd10_dt1
-  !print *,'u_bkwd10_dt2 =', u_bkwd10_dt2
-
   !! Fifty Steps
   do i=1,50
     ! Explicit
@@ -166,12 +132,6 @@ implicit none
     u_bkwd50_dt1 = matmul(M1inv,u_bkwd50_dt1)
     u_bkwd50_dt2 = matmul(M2inv,u_bkwd50_dt2)
   enddo
-
-  !print *,'u_fwd50_dt1=', u_fwd50_dt1
-  !print *,'u_fwd50_dt2=', u_fwd50_dt2
-
-  !print *,'u_bkwd50_dt1 =', u_bkwd50_dt1
-  !print *,'u_bkwd50_dt2 =', u_bkwd50_dt2
 
   ! Analytical Solutions:
   do j=1,N
